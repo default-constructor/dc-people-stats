@@ -1,8 +1,8 @@
 import axios from 'axios'
 import {ref} from 'vue'
-import {AliensByAge, AliensByCountry, AliensBySex} from '@/models/aliens.model'
+import {RefugeesByAge, RefugeesByCountry, RefugeesBySex} from '@/models/refugees.model'
 
-export const useAliensApi = () => {
+export const useRefugeesApi = () => {
   const api = axios.create({
     baseURL: 'http://localhost:8082'
   })
@@ -11,7 +11,7 @@ export const useAliensApi = () => {
   const result = ref()
   const error = ref()
 
-  const loadAliensByAge = async (from: number, to: number, minAge?: number, maxAge?: number, countries?: string[]) => {
+  const loadRefugeesByAge = async (from: number, to: number, minAge?: number, maxAge?: number, countries?: string[]) => {
     loading.value = true
     error.value = undefined
 
@@ -33,19 +33,19 @@ export const useAliensApi = () => {
       params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
     }
 
-    await api.get('/aliens-by-age' + params)
+    await api.get('/refugees-by-age' + params)
         .then((r) => {
-          result.value = r.data as AliensByAge[]
+          result.value = r.data as RefugeesByAge[]
         })
         .catch((e) => {
-          error.value = 'Failed to load aliens: ' + e.message
+          error.value = 'Failed to load refugees: ' + e.message
         })
         .finally(() => {
           loading.value = false
         })
   }
 
-  const loadAliensByCountry = async (from: number, to: number, countries?: string[]) => {
+  const loadRefugeesByCountry = async (from: number, to: number, countries?: string[]) => {
     loading.value = true
     error.value = undefined
 
@@ -59,19 +59,19 @@ export const useAliensApi = () => {
       params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
     }
 
-    await api.get('/aliens-by-country' + params)
+    await api.get('/refugees-by-country' + params)
         .then((r) => {
-          result.value = r.data as AliensByCountry[]
+          result.value = r.data as RefugeesByCountry[]
         })
         .catch((e) => {
-          error.value = 'Failed to load aliens: ' + e.message
+          error.value = 'Failed to load refugees: ' + e.message
         })
         .finally(() => {
           loading.value = false
         })
   }
 
-  const loadAliensBySex = async (from: number, to: number, sex?: string, countries?: string[]) => {
+  const loadRefugeesBySex = async (from: number, to: number, sex?: string, countries?: string[]) => {
     loading.value = true
     error.value = undefined
 
@@ -89,12 +89,12 @@ export const useAliensApi = () => {
       params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
     }
 
-    await api.get('/aliens-by-sex' + params)
+    await api.get('/refugees-by-sex' + params)
         .then((r) => {
-          result.value = r.data as AliensBySex[]
+          result.value = r.data as RefugeesBySex[]
         })
         .catch((e) => {
-          error.value = 'Failed to load aliens: ' + e.message
+          error.value = 'Failed to load refugees: ' + e.message
         })
         .finally(() => {
           loading.value = false
@@ -102,11 +102,11 @@ export const useAliensApi = () => {
   }
 
   return {
-    loadAliensByAge,
-    loadAliensByCountry,
-    loadAliensBySex,
-    aliensLoading: loading,
-    aliensResult: result,
-    aliensError: error
+    loadRefugeesByAge,
+    loadRefugeesByCountry,
+    loadRefugeesBySex,
+    refugeesLoading: loading,
+    refugeesResult: result,
+    refugeesError: error
   }
 }
