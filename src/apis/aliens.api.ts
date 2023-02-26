@@ -11,7 +11,7 @@ export const useAliensApi = () => {
   const result = ref()
   const error = ref()
 
-  const loadAliensByCountry = async (from: number, to: number, countries?: string[]) => {
+  const loadAliensByAge = async (from: number, to: number, minAge?: number, maxAge?: number, countries?: string[]) => {
     loading.value = true
     error.value = undefined
 
@@ -21,7 +21,39 @@ export const useAliensApi = () => {
       params += '&to=' + to
     }
 
+    if (minAge) {
+      params += '&minAge=' + minAge
+    }
 
+    if (maxAge) {
+      params += '&maxAge=' + maxAge
+    }
+
+    if (countries && countries.length > 0) {
+      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    }
+
+    await api.get('/aliens-by-age' + params)
+        .then((r) => {
+          result.value = r.data as AliensByCountry[]
+        })
+        .catch((e) => {
+          error.value = 'Failed to load aliens: ' + e.message
+        })
+        .finally(() => {
+          loading.value = false
+        })
+  }
+
+  const loadAliensByCountry = async (from: number, to: number, countries?: string[]) => {
+    loading.value = true
+    error.value = undefined
+
+    let params = '?from=' + ((from && from > 1998) ? from : 1998)
+
+    if (to && to >= 1998) {
+      params += '&to=' + to
+    }
 
     if (countries && countries.length > 0) {
       params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
@@ -70,6 +102,7 @@ export const useAliensApi = () => {
   }
 
   return {
+    loadAliensByAge,
     loadAliensByCountry,
     loadAliensBySex,
     aliensLoading: loading,

@@ -8,6 +8,14 @@ export class Aliens {
   ) {}
 }
 
+export class AliensByAge {
+  constructor(
+      public year: number,
+      public age: number,
+      public count: number
+  ) {}
+}
+
 export class AliensByCountry {
   constructor(
       public year: number,
