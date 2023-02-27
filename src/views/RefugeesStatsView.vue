@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, watchEffect} from 'vue'
+import {ref, watch, watchEffect} from 'vue'
 import {ChartData} from '@/models/chart-data.model'
 import Chart from '@/components/Chart.vue'
 import LabeledSelect from '@/components/LabeledSelect.vue'
@@ -9,6 +9,7 @@ import {RefugeesByAge, RefugeesByCountry, RefugeesBySex} from '@/models/refugees
 import RadioGroup from '@/components/RadioGroup.vue'
 import {range} from 'd3'
 import MultiSelect from '@/components/MultiSelect.vue'
+import {countryStore} from '@/states/country.state'
 
 const refugeesRef = ref()
 const refugeesChartDataRef = ref([] as ChartData[])
@@ -456,10 +457,15 @@ const fromYearRef = ref(2010)
 const toYearRef = ref(2021)
 const minAgeRef = ref()
 const maxAgeRef = ref()
-// const countriesRef = ref(['Afghanistan', 'Somalia', 'Staatenlos', 'Syrien', 'Ungeklärt / Ohne Angabe'])
-const countriesRef = ref([])
 
-const minYear = 1998;
+let defaultCountries = countryStore.selectedCountries.get('refugees');
+if (!defaultCountries || defaultCountries.length === 0) {
+  defaultCountries = ['Afghanistan', 'Somalia', 'Staatenlos', 'Syrien', 'Ungeklärt / Ohne Angabe']
+  countryStore.setSelectedCountries('refugees', defaultCountries)
+}
+const countriesRef = ref(defaultCountries)
+
+const minYear = 2007;
 const yearsRef = ref(Array.from(Array(2021 - minYear + 1), (_, i) => minYear + i))
 
 const {loadRefugeesByAge, loadRefugeesByCountry, loadRefugeesBySex, refugeesResult} = useRefugeesApi()
@@ -557,6 +563,10 @@ const loadRefugeesBySexData = () => {
         maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(refugeesChartDataRef.value).values()) as number[])
       })
 }
+
+watch(countriesRef, countries => {
+  countryStore.setSelectedCountries('refugees', countries)
+})
 
 watchEffect(() => {
   if (fromYearRef.value || toYearRef.value || countriesRef.value) {

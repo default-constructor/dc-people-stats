@@ -1,0 +1,26 @@
+$color-black: #2b2b2b;
+$color-blue: #a6b8c9;
+$color-green: #57894e;
+$color-white: #fff;
+$color-pink: #a472b1;
+$color-grey: #8c8c8c;
+
+@mixin shadow-blue($x: 2px, $y: 2px, $blur: 2px, $alpha: .5) {
+  box-shadow: $x $y $blur rgba(166, 184, 201, $alpha);
+}
+
+@mixin background-color-blue($alpha: .5) {
+  background-color: rgba(166, 184, 201, $alpha);
+}
+
+@mixin background-color-green($alpha: .5) {
+  background-color: rgba(87, 137, 78, $alpha);
+}
+
+@mixin background-color-grey($alpha: .5) {
+  background-color: rgba(140, 140, 140, $alpha);
+}
+
+$breakpoint-phone: 20rem; // 320px - min 360, max 414
+$breakpoint-tablet: 28rem; // 448px - min 601, max 810
+$breakpoint-desktop: 60rem; // 992px - min 1024, max 2560

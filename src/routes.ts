@@ -10,13 +10,13 @@ const routes = [
     component: Home
   },
   {
-    name: 'aliens-stats',
-    path: '/aliens-stats',
+    name: 'aliens',
+    path: '/aliens',
     component: AliensStatsView
   },
   {
-    name: 'refugees-stats',
-    path: '/refugees-stats',
+    name: 'refugees',
+    path: '/refugees',
     component: RefugeesStatsView
   },
 ];

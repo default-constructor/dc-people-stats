@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref, watchEffect} from 'vue'
+import {ref, watch, watchEffect} from 'vue'
 import {ChartData} from '@/models/chart-data.model'
 import Chart from '@/components/Chart.vue'
 import LabeledSelect from '@/components/LabeledSelect.vue'
@@ -9,6 +9,7 @@ import {AliensByAge, AliensByCountry, AliensBySex} from '@/models/aliens.model';
 import RadioGroup from '@/components/RadioGroup.vue';
 import {range} from 'd3';
 import MultiSelect from '@/components/MultiSelect.vue';
+import {countryStore} from "@/states/country.state";
 
 const aliensRef = ref()
 const aliensChartDataRef = ref([] as ChartData[])
@@ -456,8 +457,13 @@ const fromYearRef = ref(2010)
 const toYearRef = ref(2021)
 const minAgeRef = ref()
 const maxAgeRef = ref()
-// const countriesRef = ref(['Afghanistan', 'Somalia', 'Staatenlos', 'Syrien', 'Ungeklärt / Ohne Angabe'])
-const countriesRef = ref([])
+
+let defaultCountries = countryStore.selectedCountries.get('aliens');
+if (!defaultCountries || defaultCountries.length === 0) {
+  defaultCountries = ['Afghanistan', 'Somalia', 'Staatenlos', 'Syrien', 'Ungeklärt / Ohne Angabe']
+  countryStore.setSelectedCountries('aliens', defaultCountries)
+}
+const countriesRef = ref(defaultCountries)
 
 const minYear = 1998;
 const yearsRef = ref(Array.from(Array(2021 - minYear + 1), (_, i) => minYear + i))
@@ -557,6 +563,10 @@ const loadAliensBySexData = () => {
         maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(aliensChartDataRef.value).values()) as number[])
       })
 }
+
+watch(countriesRef, countries => {
+  countryStore.setSelectedCountries('aliens', countries)
+})
 
 watchEffect(() => {
   if (fromYearRef.value || toYearRef.value || countriesRef.value) {
