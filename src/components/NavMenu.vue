@@ -28,6 +28,9 @@ const handleBurgerMenu = (() => {
           <li>
             <router-link to="/refugees" @click="handleBurgerMenu">Schutzsuchende</router-link>
           </li>
+          <li>
+            <router-link to="/crimes" @click="handleBurgerMenu">Straftaten</router-link>
+          </li>
         </ul>
       </div>
     </div>
@@ -40,6 +43,9 @@ const handleBurgerMenu = (() => {
         <li>
           <router-link to="/refugees">Schutzsuchende</router-link>
         </li>
+        <li>
+          <router-link to="/crimes">Straftaten</router-link>
+        </li>
       </ul>
     </div>
   </div>
@@ -47,6 +53,7 @@ const handleBurgerMenu = (() => {
 
 <style scoped lang="scss">
 .nav-menu {
+  margin-bottom: 32px;
   font-size: 1rem;
 
   ul {

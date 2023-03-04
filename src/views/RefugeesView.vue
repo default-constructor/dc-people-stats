@@ -9,435 +9,21 @@ import {RefugeesByAge, RefugeesByCountry, RefugeesBySex} from '@/models/refugees
 import RadioGroup from '@/components/RadioGroup.vue'
 import {range} from 'd3'
 import MultiSelect from '@/components/MultiSelect.vue'
-import {countryStore} from '@/states/country.state'
+import {viewStore} from '@/states/country.state'
+import {colors} from "@/constants/colors";
+import {countries} from "@/constants/countries";
 
 const refugeesRef = ref()
 const refugeesChartDataRef = ref([] as ChartData[])
 
-const colors = [
-  '#00d9ff',
-  '#167322',
-  '#ffcc00',
-  '#ff0000',
-  '#3a5cc4',
-  '#00ffbb',
-  '#aa00ff',
-  '#97ceb5',
-  '#193338',
-  '#8c534c',
-  '#7300ff',
-  '#065d1c',
-  '#a49765',
-  '#247e8d',
-  '#e600ff',
-  '#ff6a00',
-  '#0022ff',
-  '#82cbdc',
-  '#234f29',
-  '#6e0c0c',
-  '#2d8f2d',
-  '#3a114f',
-  '#694444',
-  '#6b6b6b',
-  '#c76b6b',
-  '#7e427e',
-  '#18317c',
-  '#e54d4d',
-  '#209620',
-  '#a2a2a2',
-  '#358600',
-  '#70385c',
-  '#142350',
-  '#ff6200',
-  '#64641b',
-  '#4e1b69',
-  '#c79089',
-  '#08444f',
-  '#3d9a49',
-  '#c7c717',
-  '#2a2929',
-  '#ea3434',
-  '#0000ff',
-  '#113315',
-  '#5eb8c9',
-  '#5dc45d',
-  '#4d004d',
-  '#26269a',
-  '#a8965e',
-  '#7be37b',
-  '#23419b',
-  '#ce5656',
-  '#0f3238',
-  '#c24d97',
-  '#6c4b47',
-  '#8cf88c',
-  '#2a562f',
-  '#804511',
-  '#c2c228',
-  '#006577',
-  '#1f8f71',
-  '#494747',
-  '#a4889a',
-  '#ffff00',
-  '#700900',
-  '#479127',
-  '#ff8134',
-  '#2b6dfa',
-  '#662280',
-  '#f3cc27',
-  '#108f78',
-  '#8f1bd3',
-  '#28d981',
-  '#96c419',
-  '#de1313',
-  '#424fe0',
-  '#68f158',
-  '#dabb3c',
-  '#3dbe9c',
-  '#0c157c',
-  '#3db9ce',
-  '#5c229a',
-  '#2dd209',
-  '#ab3c83',
-  '#494747',
-  '#55b055',
-  '#29298c',
-  '#4b275d',
-  '#7a5753',
-  '#f5ab69',
-  '#085612',
-  '#a86ca8',
-  '#e03a3a',
-  '#483a04',
-  '#a6a6a6',
-  '#288f60',
-  '#282880',
-  '#bd69bd',
-  '#3fc53f',
-  '#a42e2e',
-  '#2d545b',
-  '#754821',
-  '#85d7c1',
-  '#713b8c',
-  '#484848',
-  '#910d91',
-  '#5d9da8',
-  '#16348f',
-  '#79285b',
-  '#227a22',
-  '#bb938f',
-  '#257281',
-  '#c22525',
-  '#adad4b',
-  '#111162',
-  '#376b3e',
-  '#75448d',
-  '#5d5a5a',
-  '#3e913e',
-  '#c77070',
-  '#296d79',
-  '#655c5c',
-  '#67e1f6',
-  '#733a73',
-  '#257925',
-  '#6e0c0c',
-  '#4f774f',
-  '#cb762b',
-  '#494993',
-  '#be1380',
-  '#72b4c0',
-  '#805e5a',
-  '#4f4646',
-  '#3b773b',
-  '#da5959',
-  '#5757cc',
-  '#912d6d',
-  '#2e8594',
-  '#3333a2',
-  '#a28481',
-  '#95cbbc',
-  '#722996',
-  '#45814d',
-  '#d25b5b',
-  '#51b45e',
-  '#0f673f',
-  '#8c2727',
-  '#2e2ebe',
-  '#806161',
-  '#8f7a26',
-  '#700e4e',
-  '#122e85',
-  '#4a8852',
-  '#813c81',
-  '#232391',
-  '#594c4c',
-  '#b07b4d',
-  '#0d6b7c',
-  '#376037',
-  '#b43333',
-  '#d333d3',
-  '#817878',
-  '#4cb24c',
-  '#3030b7',
-  '#ff00ff',
-  '#3ca8bb',
-  '#919128',
-  '#54c563',
-  '#543f3c',
-  '#a1a125',
-  '#772e9b',
-  '#8c1919',
-  '#8484b2',
-  '#570b57',
-  '#9f6431',
-  '#00ff00',
-  '#abcdd3',
-  '#a11770',
-  '#9b9bfa',
-  '#544f4f',
-  '#444413',
-  '#b22f2f',
-  '#4ac44a',
-  '#c44e99',
-  '#24b28c',
-  '#a84c4c',
-  '#06064f',
-  '#d5d518',
-  '#62e762',
-  '#a62177',
-  '#28422b',
-  '#6c4a4a',
-  '#ff7700',
-  '#3fa2b4',
-  '#2a5240',
-  '#8a1160',
-  '#4a734f',
-  '#a43dd7',
-  '#69706d',
-  '#ad1f1f',
-  '#3edc3e',
-  '#0d0d9b',
-  '#e17211',
-  '#e352b0',
-  '#5e0e0e',
-  '#7a681d',
-  '#58b264',
-  '#284449'
-]
-
-const countries = ref([
-  'Ägypten',
-  'Äquatorialguinea',
-  'Äthiopien',
-  'Afghanistan',
-  'Albanien',
-  'Algerien',
-  'Andorra',
-  'Angola',
-  'Antigua und Barbuda',
-  'Argentinien',
-  'Armenien',
-  'Aserbaidschan',
-  'Australien',
-  'Bahamas',
-  'Bahrain',
-  'Bangladesch',
-  'Barbados',
-  'Belarus',
-  'Belgien',
-  'Belize',
-  'Benin',
-  'Bhutan',
-  'Bolivien, Plurinationaler Staat',
-  'Bosnien und Herzegowina',
-  'Botsuana',
-  'Brasilien',
-  'Britische Überseegebiete',
-  'Brunei Darussalam',
-  'Bulgarien',
-  'Burkina Faso',
-  'Burundi',
-  'Cabo Verde',
-  'Chile',
-  'China',
-  'Costa Rica',
-  'Cote d\'Ivoire',
-  'Dominica',
-  'Dominikanische Republik',
-  'Dschibuti',
-  'Dänemark',
-  'Ecuador',
-  'El Salvador',
-  'Eritrea',
-  'Estland',
-  'Eswatini',
-  'Fidschi',
-  'Finnland',
-  'Frankreich',
-  'Gabun',
-  'Gambia',
-  'Georgien',
-  'Ghana',
-  'Grenada',
-  'Griechenland',
-  'Guatemala',
-  'Guinea',
-  'Guinea-Bissau',
-  'Guyana',
-  'Haiti',
-  'Honduras',
-  'Hongkong',
-  'Indien',
-  'Indonesien',
-  'Irak',
-  'Iran, Islamische Republik',
-  'Irland',
-  'Island',
-  'Israel',
-  'Italien',
-  'Jamaika',
-  'Japan',
-  'Jemen',
-  'Jordanien',
-  'Jugoslawien, Bundesrep. (27.04.1992-04.02.2003)',
-  'Jugoslawien, Soz. Föd. Republik (bis 26.04.1992)',
-  'Kambodscha',
-  'Kamerun',
-  'Kanada',
-  'Kasachstan',
-  'Katar',
-  'Kenia',
-  'Kirgisistan',
-  'Kiribati',
-  'Kolumbien',
-  'Komoren',
-  'Kongo, Demokratische Republik',
-  'Kongo, Republik',
-  'Korea, Demokratische Volksrepublik',
-  'Korea, Republik',
-  'Kosovo',
-  'Kroatien',
-  'Kuba',
-  'Kuwait',
-  'Laos, Demokratische Volksrepublik',
-  'Lesotho',
-  'Lettland',
-  'Libanon',
-  'Liberia',
-  'Libyen',
-  'Liechtenstein',
-  'Litauen',
-  'Luxemburg',
-  'Macau',
-  'Madagaskar',
-  'Malawi',
-  'Malaysia',
-  'Malediven',
-  'Mali',
-  'Malta',
-  'Marokko',
-  'Marshallinseln',
-  'Mauretanien',
-  'Mauritius',
-  'Mexiko',
-  'Mikronesien, Föderierte Staaten von',
-  'Moldau, Republik',
-  'Monaco',
-  'Mongolei',
-  'Montenegro (ab 03.06.2006)',
-  'Mosambik',
-  'Myanmar',
-  'Namibia',
-  'Nauru',
-  'Nepal',
-  'Neuseeland',
-  'Nicaragua',
-  'Niederlande',
-  'Niger',
-  'Nigeria',
-  'Nordmazedonien',
-  'Norwegen',
-  'Österreich',
-  'Oman',
-  'Pakistan',
-  'Palau',
-  'Palästinensische Gebiete',
-  'Panama',
-  'Papua-Neuguinea',
-  'Paraguay',
-  'Peru',
-  'Philippinen',
-  'Polen',
-  'Portugal',
-  'Ruanda',
-  'Rumänien',
-  'Russische Föderation',
-  'Salomonen',
-  'Sambia',
-  'Samoa',
-  'San Marino',
-  'Sao Tome und Principe',
-  'Saudi-Arabien',
-  'Schweden',
-  'Schweiz',
-  'Senegal',
-  'Serbien',
-  'Serbien (einschl. Kosovo) (03.06.2006-16.02.2008)',
-  'Serbien und Montenegro (05.02.2003-02.06.2006)',
-  'Seychellen',
-  'Sierra Leone',
-  'Simbabwe',
-  'Singapur',
-  'Slowakei',
-  'Slowenien',
-  'Somalia',
-  'Sowjetunion (bis 25.12.1991)',
-  'Spanien',
-  'Sri Lanka',
-  'St. Kitts und Nevis',
-  'St. Lucia',
-  'St. Vincent und die Grenadinen',
-  'Staatenlos',
-  'Sudan (einschließlich Südsudan) (bis 08.07.2011)',
-  'Sudan (ohne Südsudan) (ab 09.07.2011)',
-  'Suriname',
-  'Syrien',
-  'Südafrika',
-  'Südsudan (ab 09.07.2011)',
-  'Tadschikistan',
-  'Taiwan',
-  'Tansania',
-  'Thailand',
-  'Timor-Leste',
-  'Togo',
-  'Tonga',
-  'Trinidad und Tobago',
-  'Tschad',
-  'Tschechien',
-  'Tschechoslowakei (bis 31.12.1992)',
-  'Tunesien',
-  'Turkmenistan',
-  'Tuvalu',
-  'Türkei',
-  'Uganda',
-  'Ukraine',
-  'Ungarn',
-  'Ungeklärt / Ohne Angabe',
-  'Uruguay',
-  'Usbekistan',
-  'Vanuatu',
-  'Vatikanstadt',
-  'Venezuela, Bolivarische Republik',
-  'Vereinigte Arabische Emirate',
-  'Vereinigte Staaten',
-  'Vereinigtes Königreich',
-  'Vietnam',
-  'Zentralafrikanische Republik',
-  'Zypern'
-])
+const countryMap = ref(new Map<any, string>())
+const countryColors = ref(new Map<any, string>())
+countries.forEach((country, i) => {
+  countryMap.value.set(i, country)
+  countryColors.value.set(i, colors[i])
+})
 
 const ageGroups = range(0, 97).map((age, i) => {return {name: age < 96 ? age.toString() : 'Unbekannt', color: colors[i]}})
-const countryGroups = countries.value.map((country, i) => {return {name: country, color: colors[i]}})
 const sexGroups = [{name: 'männlich', color: '#00d9ff'}, {name: 'weiblich', color: '#ff4d4d'}]
 
 let refugeesChartRef = ref('country')
@@ -458,12 +44,12 @@ const toYearRef = ref(2021)
 const minAgeRef = ref()
 const maxAgeRef = ref()
 
-let defaultCountries = countryStore.selectedCountries.get('refugees');
+let defaultCountries = viewStore.selectedFilters.get('refugees');
 if (!defaultCountries || defaultCountries.length === 0) {
-  defaultCountries = ['Afghanistan', 'Somalia', 'Staatenlos', 'Syrien', 'Ungeklärt / Ohne Angabe']
-  countryStore.setSelectedCountries('refugees', defaultCountries)
+  defaultCountries = [3, 164, 171, 175, 196]
+  viewStore.setSelectedFilters('refugees', defaultCountries)
 }
-const countriesRef = ref(defaultCountries)
+const countriesRef = ref(defaultCountries as number[])
 
 const minYear = 2007;
 const yearsRef = ref(Array.from(Array(2021 - minYear + 1), (_, i) => minYear + i))
@@ -508,10 +94,9 @@ const retrieveAgeColors = (data: RefugeesByAge[]) => {
 }
 
 const retrieveCountryColors = (data: RefugeesByCountry[]) => {
-  const country = [...new Set(data.map((refugees: RefugeesByCountry)  => refugees.country)).values()];
-  return countryGroups
-      .filter((item: any) => country.find((countryGroup: string) => countryGroup === item.name))
-      .map((item: any) => item.color)
+  const indexes = [...new Set(data.map((refugees: RefugeesByCountry)  => refugees.country)).values()]
+      .map(country => countries.indexOf(country)).sort((a, b) => a - b)
+  return indexes.map(index => countryColors.value.get(index))
 }
 
 const retrieveSexColors = (data: RefugeesBySex[]) => {
@@ -532,7 +117,7 @@ const retrieveGroupedData = (data: ChartData[]) => {
 }
 
 const loadRefugeesByAgeData = () => {
-  loadRefugeesByAge(fromYearRef.value, toYearRef.value, minAgeRef.value, maxAgeRef.value, countriesRef.value)
+  loadRefugeesByAge(fromYearRef.value, toYearRef.value, minAgeRef.value, maxAgeRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
       .then(() => {
         refugeesRef.value = refugeesResult.value
         refugeesChartDataRef.value = retrieveRefugeesByAgeChartData(refugeesResult.value)
@@ -543,18 +128,19 @@ const loadRefugeesByAgeData = () => {
 }
 
 const loadRefugeesByCountryData = () => {
-  loadRefugeesByCountry(fromYearRef.value, toYearRef.value, countriesRef.value)
+  loadRefugeesByCountry(fromYearRef.value, toYearRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
       .then(() => {
         refugeesRef.value = refugeesResult.value
         refugeesChartDataRef.value = retrieveRefugeesByCountryChartData(refugeesResult.value)
         countryColorsRef.value = retrieveCountryColors(refugeesResult.value)
+        console.log(countryColorsRef.value)
         xLabelsRef.value = [...new Set(refugeesChartDataRef.value.map((d: ChartData) => d.x) as string[]).values()]
         maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(refugeesChartDataRef.value).values()) as number[])
       })
 }
 
 const loadRefugeesBySexData = () => {
-  loadRefugeesBySex(fromYearRef.value, toYearRef.value, undefined, countriesRef.value)
+  loadRefugeesBySex(fromYearRef.value, toYearRef.value, undefined, countries.filter((country, index) => countriesRef.value.includes(index)))
       .then(() => {
         refugeesRef.value = refugeesResult.value
         refugeesChartDataRef.value = retrieveRefugeesBySexChartData(refugeesResult.value)
@@ -565,7 +151,7 @@ const loadRefugeesBySexData = () => {
 }
 
 watch(countriesRef, countries => {
-  countryStore.setSelectedCountries('refugees', countries)
+  viewStore.setSelectedFilters('refugees', countries)
 })
 
 watchEffect(() => {
@@ -614,21 +200,21 @@ watchEffect(() => {
           <div class="refugees__legend">
             <ul class="legend__years">
               <li>
-                <LabeledSelect id="from-year" label="Von Anfang" v-model="fromYearRef" :options="yearsRef">
+                <LabeledSelect id="from-year" label="Von" v-model="fromYearRef" :options="yearsRef">
                 </LabeledSelect>
               </li>
               <li>
-                <LabeledSelect id="to-year" label="Bis Ende" v-model="toYearRef" :options="yearsRef">
+                <LabeledSelect id="to-year" label="Bis" v-model="toYearRef" :options="yearsRef">
                 </LabeledSelect>
               </li>
             </ul>
-            <MultiSelect :options="countries" :defaults="countriesRef" label="Länderauswahl" v-model="countriesRef"></MultiSelect>
             <RadioGroup name="refugees" :options="refugeesRadioGroupRef" v-model="refugeesChartRef"></RadioGroup>
+            <MultiSelect :options="countryMap" :defaults="countriesRef" :colors="countryColors" label="Länderauswahl" v-model="countriesRef"></MultiSelect>
           </div>
         </template>
         <template v-slot:info>
           <div class="refugees__reference">
-            <strong>Quellen:</strong><br>
+            <strong>Quellen: </strong>
             <span>Statistisches Bundesamt (<a href="https://www.destatis.de" target="_blank">www.destatis.de</a>)</span><br>
           </div>
         </template>
@@ -752,11 +338,10 @@ watchEffect(() => {
   &__legend {
     display: flex;
     justify-content: flex-start;
-    margin: 0 128px;
 
     ul {
       list-style: none;
-      min-width: 168px;
+      min-width: 128px;
       margin: 0;
       padding: 0;
 

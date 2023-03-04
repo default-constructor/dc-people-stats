@@ -1,8 +1,8 @@
-import {reactive} from "vue";
+import {reactive} from 'vue';
 
-export const countryStore = reactive({
-  selectedCountries: new Map<string, string[]>(),
-  setSelectedCountries(view: string, countries: string[]) {
-    this.selectedCountries.set(view, countries)
+export const viewStore = reactive({
+  selectedFilters: new Map<string, string[] | number[]>(),
+  setSelectedFilters(view: string, countries: string[] | number[]) {
+    this.selectedFilters.set(view, countries)
   }
 })

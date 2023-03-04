@@ -21,7 +21,7 @@ export default defineComponent({
   },
 
   setup(props) {
-    const sizeRef = ref({width: 1540, height: 512})
+    const sizeRef = ref({width: 1344, height: 512})
     const marginRef = ref({left: 64, top: 16, right: 64, bottom: 64})
     const chart = {
       width: sizeRef.value.width - marginRef.value.left - marginRef.value.right,
@@ -92,6 +92,9 @@ export default defineComponent({
 
 <template>
   <div class="chart">
+    <div class="chart__info">
+      <slot name="info"></slot>
+    </div>
     <svg :width="sizeRef.width" :height="sizeRef.height" class="chart__area">
       <g id="chart-area" :transform="'translate(' + marginRef.left + ',' + marginRef.top + ')'" class="area">
         <g class="area__scale"></g>
@@ -103,9 +106,6 @@ export default defineComponent({
     </svg>
     <div class="chart__legend">
       <slot name="legend"></slot>
-    </div>
-    <div class="chart__info">
-      <slot name="info"></slot>
     </div>
   </div>
 </template>
@@ -128,6 +128,10 @@ export default defineComponent({
         }
       }
     }
+  }
+
+  &__legend {
+    margin: 0 64px;
   }
 }
 </style>

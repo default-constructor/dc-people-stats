@@ -4,7 +4,7 @@ defineProps({
   name: String,
   label: String,
   options: Array,
-  modelValue: Boolean
+  modelValue: String
 })
 
 const emit = defineEmits(["update:modelValue"])

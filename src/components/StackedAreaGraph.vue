@@ -46,7 +46,7 @@ export default defineComponent({
 
     const createStack = (data: ChartData[]) => {
       const groupedMap = group(data, (d: ChartData) => d.x, (d: ChartData) => d.z)
-      const stackKeys = Array.from(new Set(data.map(d => d.z)).values()).sort()
+      const stackKeys = Array.from(new Set(data.map(d => d.z)).values()).sort() as string[]
 
       const reducer = (v: any[]) => sum(v, d => d.y)
 
