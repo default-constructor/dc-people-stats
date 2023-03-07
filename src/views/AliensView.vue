@@ -5,31 +5,31 @@ import Chart from '@/components/Chart.vue'
 import LabeledSelect from '@/components/LabeledSelect.vue'
 import StackedAreaGraph from '@/components/StackedAreaGraph.vue'
 import {useAliensApi} from '@/apis/aliens.api';
-import {AliensByAge, AliensByCountry, AliensBySex} from '@/models/aliens.model';
+import {AliensByAge, AliensByAgeGroup, AliensByCountry, AliensBySex} from '@/models/aliens.model';
 import RadioGroup from '@/components/RadioGroup.vue';
-import {range} from 'd3';
 import MultiSelect from '@/components/MultiSelect.vue';
 import {viewStore} from "@/states/country.state";
 import {colors} from "@/constants/colors";
 import {countries} from "@/constants/countries";
+import LabeledCheckbox from "@/components/LabeledCheckbox.vue";
 
 const aliensRef = ref()
 const aliensChartDataRef = ref([] as ChartData[])
 
 const countryMap = ref(new Map<any, string>())
-const countryColors = ref(new Map<any, string>())
+const countryColors = ref(new Map<number, string>())
 countries.forEach((country, i) => {
   countryMap.value.set(i, country)
   countryColors.value.set(i, colors[i])
 })
 
-const ageGroups = range(0, 97).map((age, i) => {return {name: age < 96 ? age.toString() : 'Unbekannt', color: colors[i]}})
 const sexGroups = [{name: 'männlich', color: '#00d9ff'}, {name: 'weiblich', color: '#ff4d4d'}]
 
-let aliensChartRef = ref('country')
+let aliensChartTypeRef = ref('country')
 const aliensRadioGroupRef = ref([
   {id: 'aliens-by-country', label: 'Nach Land', value: 'country', checked: true},
   {id: 'aliens-by-age', label: 'Nach Alter', value: 'age', checked: false},
+  {id: 'aliens-by-age-groups', label: 'Nach Altersgruppen', value: 'age-group', checked: false},
   {id: 'aliens-by-sex', label: 'Nach Geschlecht', value: 'sex', checked: false}
 ])
 
@@ -43,10 +43,13 @@ const fromYearRef = ref(2010)
 const toYearRef = ref(2021)
 const minAgeRef = ref()
 const maxAgeRef = ref()
+const ageGroupsRef = ref(['0-4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80-84', '85-89', '90-94', '95-99'])
+const lessRefugeesCheckboxRef = ref()
+const sumCasesCheckboxRef = ref()
 
 let defaultCountries = viewStore.selectedFilters.get('aliens');
 if (!defaultCountries || defaultCountries.length === 0) {
-  defaultCountries = [3, 164, 171, 175, 196]
+  defaultCountries = [0, 164, 171, 175, 197]
   viewStore.setSelectedFilters('aliens', defaultCountries)
 }
 const countriesRef = ref(defaultCountries as number[])
@@ -54,7 +57,7 @@ const countriesRef = ref(defaultCountries as number[])
 const minYear = 1998;
 const yearsRef = ref(Array.from(Array(2021 - minYear + 1), (_, i) => minYear + i))
 
-const {loadAliensByAge, loadAliensByCountry, loadAliensBySex, aliensResult} = useAliensApi()
+const {loadAliensByAge, loadAliensByAgeGroup, loadAliensByCountry, loadAliensBySex, aliensResult} = useAliensApi()
 
 const retrieveAliensByAgeChartData = (data: AliensByAge[]): ChartData[] => {
   return data.map((aliens => {
@@ -62,6 +65,16 @@ const retrieveAliensByAgeChartData = (data: AliensByAge[]): ChartData[] => {
       x: aliens.year,
       y: aliens.count,
       z: aliens.age
+    } as ChartData
+  }))
+}
+
+const retrieveAliensByAgeGroupChartData = (data: AliensByAgeGroup[]): ChartData[] => {
+  return data.map((aliens => {
+    return {
+      x: aliens.year,
+      y: aliens.count,
+      z: aliens.ageGroup
     } as ChartData
   }))
 }
@@ -87,16 +100,31 @@ const retrieveAliensBySexChartData = (data: AliensBySex[]): ChartData[] => {
 }
 
 const retrieveAgeColors = (data: AliensByAge[]) => {
-  const ages = [...new Set(data.map((aliens: AliensByAge) => {return aliens.age ? aliens.age.toString() : 'Unbekannt'})).values()];
-  return ageGroups
+  const ages = [...new Set(data.map((aliens: AliensByAge) => {return aliens.age ? aliens.age.toString() : 'Unbekannt'})).values()]
+  return ages
       .filter((item: any) => ages.find((ageGroup: string) => ageGroup === item.name))
       .map((item: any) => item.color)
 }
 
-const retrieveCountryColors = (data: AliensByCountry[]) => {
+const retrieveColors = (identifiers: any[]) => {
+  return identifiers.map((identifier, i) => colors[i])
+}
+
+const retrieveCountryColors = (countries: string[]) => {
+  const map = new Map<number, string>();
+  if (aliensChartTypeRef.value === 'country' && sumCasesCheckboxRef.value) {
+    map.set(-1, '#6b6b6b')
+  } else {
+    countries.forEach((country, i) => {
+      map.set(i, colors[i])
+    })
+  }
+
+  return map
+  /*
   const indexes = [...new Set(data.map((aliens: AliensByCountry)  => aliens.country)).values()]
       .map(country => countries.indexOf(country)).sort((a, b) => a - b)
-  return indexes.map(index => countryColors.value.get(index))
+  return indexes.map(index => countryColors.value.get(index))*/
 }
 
 const retrieveSexColors = (data: AliensBySex[]) => {
@@ -127,12 +155,25 @@ const loadAliensByAgeData = () => {
       })
 }
 
-const loadAliensByCountryData = () => {
-  loadAliensByCountry(fromYearRef.value, toYearRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
+const loadAliensByAgeGroupData = () => {
+  loadAliensByAgeGroup(fromYearRef.value, toYearRef.value, ageGroupsRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
       .then(() => {
         aliensRef.value = aliensResult.value
-        aliensChartDataRef.value = retrieveAliensByCountryChartData(aliensResult.value)
-        countryColorsRef.value = retrieveCountryColors(aliensResult.value)
+        aliensChartDataRef.value = retrieveAliensByAgeGroupChartData(aliensResult.value)
+        ageColorsRef.value = retrieveColors([...new Set(aliensResult.value.map((aliens: AliensByAgeGroup) => {return aliens.ageGroup ? aliens.ageGroup : 'Unbekannt'})).values()])
+        console.log(ageColorsRef.value)
+        xLabelsRef.value = [...new Set(aliensChartDataRef.value.map((d: ChartData) => d.x) as string[]).values()]
+        maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(aliensChartDataRef.value).values()) as number[])
+      })
+}
+
+const loadAliensByCountryData = () => {
+  loadAliensByCountry(fromYearRef.value, toYearRef.value, lessRefugeesCheckboxRef.value, sumCasesCheckboxRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
+      .then(() => {
+        aliensRef.value = aliensResult.value
+        aliensChartDataRef.value = retrieveAliensByCountryChartData(aliensRef.value)
+        countryColors.value = retrieveCountryColors([...new Set(aliensResult.value.map((aliens: AliensByCountry)  => aliens.country)).values()] as string[])
+        countryColorsRef.value = retrieveCountryColors(aliensRef.value)
         xLabelsRef.value = [...new Set(aliensChartDataRef.value.map((d: ChartData) => d.x) as string[]).values()]
         maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(aliensChartDataRef.value).values()) as number[])
       })
@@ -154,14 +195,17 @@ watch(countriesRef, countries => {
 })
 
 watchEffect(() => {
-  if (fromYearRef.value || toYearRef.value || countriesRef.value) {
-    if (aliensChartRef.value === 'age') {
+  if (fromYearRef.value || toYearRef.value || countriesRef.value || lessRefugeesCheckboxRef.value || sumCasesCheckboxRef.value) {
+    if (aliensChartTypeRef.value === 'age') {
       loadAliensByAgeData()
     }
-    if (aliensChartRef.value === 'country') {
+    if (aliensChartTypeRef.value === 'age-group') {
+      loadAliensByAgeGroupData()
+    }
+    if (aliensChartTypeRef.value === 'country') {
       loadAliensByCountryData()
     }
-    if (aliensChartRef.value === 'sex') {
+    if (aliensChartTypeRef.value === 'sex') {
       loadAliensBySexData()
     }
   }
@@ -174,21 +218,28 @@ watchEffect(() => {
       <Chart id="aliens-stats-chart" :xLabels="xLabelsRef" :maxPositiveYValue="maxPositiveYValueRef" :maxNegativeYValue="0">
         <template v-slot:graph="slotProps">
           <StackedAreaGraph
-              v-if="aliensChartRef === 'country'"
+              v-if="aliensChartTypeRef === 'country'"
               :scale="slotProps.scale"
               :chartData="aliensChartDataRef"
-              :colors="countryColorsRef"
+              :colors="Array.from(countryColors.values())"
           >
           </StackedAreaGraph>
           <StackedAreaGraph
-              v-if="aliensChartRef === 'age'"
+              v-if="aliensChartTypeRef === 'age'"
               :scale="slotProps.scale"
               :chartData="aliensChartDataRef"
               :colors="ageColorsRef"
           >
           </StackedAreaGraph>
           <StackedAreaGraph
-              v-if="aliensChartRef === 'sex'"
+              v-if="aliensChartTypeRef === 'age-group'"
+              :scale="slotProps.scale"
+              :chartData="aliensChartDataRef"
+              :colors="ageColorsRef"
+          >
+          </StackedAreaGraph>
+          <StackedAreaGraph
+              v-if="aliensChartTypeRef === 'sex'"
               :scale="slotProps.scale"
               :chartData="aliensChartDataRef"
               :colors="sexColorsRef"
@@ -207,13 +258,24 @@ watchEffect(() => {
                 </LabeledSelect>
               </li>
             </ul>
-            <RadioGroup name="aliens" :options="aliensRadioGroupRef" v-model="aliensChartRef"></RadioGroup>
+            <ul>
+              <li>
+                <LabeledCheckbox id="less-refugees" label="Ohne Schutzsuchende" v-model="lessRefugeesCheckboxRef"></LabeledCheckbox>
+              </li>
+            </ul>
+            <div>
+              <RadioGroup name="aliens" :options="aliensRadioGroupRef" v-model="aliensChartTypeRef"></RadioGroup>
+              <LabeledCheckbox
+                  v-if="aliensChartTypeRef === 'country'" id="sum-countries" label="Länder zusammenfassen"
+                  v-model="sumCasesCheckboxRef">
+              </LabeledCheckbox>
+            </div>
             <MultiSelect :options="countryMap" :defaults="countriesRef" :colors="countryColors" label="Länderauswahl" v-model="countriesRef"></MultiSelect>
           </div>
         </template>
         <template v-slot:info>
           <div class="aliens__reference">
-            <strong>Quellen: </strong>
+            <strong>Quelle: </strong>
             <span>Statistisches Bundesamt (<a href="https://www.destatis.de" target="_blank">www.destatis.de</a>)</span><br>
           </div>
         </template>

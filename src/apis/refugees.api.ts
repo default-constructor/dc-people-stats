@@ -1,6 +1,6 @@
 import axios from 'axios'
 import {ref} from 'vue'
-import {RefugeesByAge, RefugeesByCountry, RefugeesBySex} from '@/models/refugees.model'
+import {RefugeesByAge, RefugeesByAgeGroup, RefugeesByCountry, RefugeesBySex} from '@/models/refugees.model'
 
 export const useRefugeesApi = () => {
   const api = axios.create({
@@ -39,6 +39,36 @@ export const useRefugeesApi = () => {
         })
         .catch((e) => {
           error.value = 'Failed to load refugees: ' + e.message
+        })
+        .finally(() => {
+          loading.value = false
+        })
+  }
+
+  const loadRefugeesByAgeGroup = async (from: number, to: number, ageGroups?: string[], countries?: string[]) => {
+    loading.value = true
+    error.value = undefined
+
+    let params = '?from=' + ((from && from > 1998) ? from : 1998)
+
+    if (to && to >= 1998) {
+      params += '&to=' + to
+    }
+
+    if (ageGroups && ageGroups.length > 0) {
+      params += '&age-groups=' + ageGroups.join(',')
+    }
+
+    if (countries && countries.length > 0) {
+      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    }
+
+    await api.get('/refugees-by-age-group' + params)
+        .then((r) => {
+          result.value = r.data as RefugeesByAgeGroup[]
+        })
+        .catch((e) => {
+          error.value = 'Failed to load aliens: ' + e.message
         })
         .finally(() => {
           loading.value = false
@@ -103,6 +133,7 @@ export const useRefugeesApi = () => {
 
   return {
     loadRefugeesByAge,
+    loadRefugeesByAgeGroup,
     loadRefugeesByCountry,
     loadRefugeesBySex,
     refugeesLoading: loading,

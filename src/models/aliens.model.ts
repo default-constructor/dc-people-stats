@@ -16,6 +16,14 @@ export class AliensByAge {
   ) {}
 }
 
+export class AliensByAgeGroup {
+  constructor(
+      public year: number,
+      public ageGroup: string,
+      public count: number
+  ) {}
+}
+
 export class AliensByCountry {
   constructor(
       public year: number,

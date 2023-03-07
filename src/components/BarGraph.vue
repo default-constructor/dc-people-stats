@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import {ref, watchEffect} from "vue"
-import {ChartData} from "../models/chart-data.model"
-import {axisBottom, axisLeft, scaleBand, scaleLinear, select} from "d3"
+import {ref, watchEffect} from 'vue'
+import {ChartData} from '@/models/chart-data.model'
+import {axisBottom, axisLeft, scaleBand, scaleLinear, select} from 'd3'
 
 const props = defineProps({
   scale: Object,
@@ -59,8 +59,6 @@ const createGraph = (scale: any, data: ChartData[]) => {
   graph.selectChild().remove()
 
   const barGraph = graph.append("g").attr("class", "bar-graph__area")
-
-  console.log("bar", data)
 
   barGraph.selectAll("rect")
       .data(data)

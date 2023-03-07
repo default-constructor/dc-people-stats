@@ -22,7 +22,7 @@ export default defineComponent({
     const createGraph = (scale: any, data: ChartData[], zLabels: string[], zColors: string[]) => {
       const areaColors = (zColors && zColors.length > 0 ? zColors : schemeCategory10)
           .map((color: string) => color + "99")
-      const zScale = scaleOrdinal(areaColors).domain(zLabels).range(areaColors)
+      const zScale = scaleOrdinal(zLabels, areaColors)
 
       const graph = select(".stacked-area-graph")
       graph.selectChild().remove()
@@ -35,6 +35,7 @@ export default defineComponent({
           .append("path")
           .style("fill", (d: any, key: any) => zScale(zLabels[key]))
           .attr("d", createArea(scale))
+          .attr("title", (d: any, key: any) => key)
     }
 
     const createArea = (scale: any): Area<any> => {
@@ -46,7 +47,13 @@ export default defineComponent({
 
     const createStack = (data: ChartData[]) => {
       const groupedMap = group(data, (d: ChartData) => d.x, (d: ChartData) => d.z)
-      const stackKeys = Array.from(new Set(data.map(d => d.z)).values()).sort() as string[]
+      const stackKeys = Array.from(new Set(data.map(d => d.z)).values()).sort((a, b) => {
+        if (typeof a === 'string') {
+          return (a as string).localeCompare(b as string, 'de-DE')
+        } else {
+          return (a as number) - (b as number)
+        }
+      }) as string[]
 
       const reducer = (v: any[]) => sum(v, d => d.y)
 

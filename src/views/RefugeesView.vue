@@ -5,7 +5,7 @@ import Chart from '@/components/Chart.vue'
 import LabeledSelect from '@/components/LabeledSelect.vue'
 import StackedAreaGraph from '@/components/StackedAreaGraph.vue'
 import {useRefugeesApi} from '@/apis/refugees.api'
-import {RefugeesByAge, RefugeesByCountry, RefugeesBySex} from '@/models/refugees.model'
+import {RefugeesByAge, RefugeesByAgeGroup, RefugeesByCountry, RefugeesBySex} from '@/models/refugees.model'
 import RadioGroup from '@/components/RadioGroup.vue'
 import {range} from 'd3'
 import MultiSelect from '@/components/MultiSelect.vue'
@@ -13,7 +13,9 @@ import {viewStore} from '@/states/country.state'
 import {colors} from "@/constants/colors";
 import {countries} from "@/constants/countries";
 
-const refugeesRef = ref()
+const refugeesByAgeRef = ref([] as RefugeesByAge[])
+const refugeesByCountryRef = ref([] as RefugeesByCountry[])
+const refugeesBySexRef = ref([] as RefugeesBySex[])
 const refugeesChartDataRef = ref([] as ChartData[])
 
 const countryMap = ref(new Map<any, string>())
@@ -30,6 +32,7 @@ let refugeesChartRef = ref('country')
 const refugeesRadioGroupRef = ref([
   {id: 'refugees-by-country', label: 'Nach Land', value: 'country', checked: true},
   {id: 'refugees-by-age', label: 'Nach Alter', value: 'age', checked: false},
+  {id: 'aliens-by-age-groups', label: 'Nach Altersgruppen', value: 'age-group', checked: false},
   {id: 'refugees-by-sex', label: 'Nach Geschlecht', value: 'sex', checked: false}
 ])
 
@@ -43,10 +46,11 @@ const fromYearRef = ref(2010)
 const toYearRef = ref(2021)
 const minAgeRef = ref()
 const maxAgeRef = ref()
+const ageGroupsRef = ref(['0-4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80-84', '85-89', '90-94', '95-99'])
 
 let defaultCountries = viewStore.selectedFilters.get('refugees');
 if (!defaultCountries || defaultCountries.length === 0) {
-  defaultCountries = [3, 164, 171, 175, 196]
+  defaultCountries = [0, 164, 171, 175, 196]
   viewStore.setSelectedFilters('refugees', defaultCountries)
 }
 const countriesRef = ref(defaultCountries as number[])
@@ -54,7 +58,7 @@ const countriesRef = ref(defaultCountries as number[])
 const minYear = 2007;
 const yearsRef = ref(Array.from(Array(2021 - minYear + 1), (_, i) => minYear + i))
 
-const {loadRefugeesByAge, loadRefugeesByCountry, loadRefugeesBySex, refugeesResult} = useRefugeesApi()
+const {loadRefugeesByAge, loadRefugeesByAgeGroup, loadRefugeesByCountry, loadRefugeesBySex, refugeesResult} = useRefugeesApi()
 
 const retrieveRefugeesByAgeChartData = (data: RefugeesByAge[]): ChartData[] => {
   return data.map((refugees => {
@@ -62,6 +66,16 @@ const retrieveRefugeesByAgeChartData = (data: RefugeesByAge[]): ChartData[] => {
       x: refugees.year,
       y: refugees.count,
       z: refugees.age
+    } as ChartData
+  }))
+}
+
+const retrieveRefugeesByAgeGroupChartData = (data: RefugeesByAgeGroup[]): ChartData[] => {
+  return data.map((refugees => {
+    return {
+      x: refugees.year,
+      y: refugees.count,
+      z: refugees.ageGroup
     } as ChartData
   }))
 }
@@ -93,10 +107,14 @@ const retrieveAgeColors = (data: RefugeesByAge[]) => {
       .map((item: any) => item.color)
 }
 
+const retrieveColors = (identifiers: any[]) => {
+  return identifiers.map((identifier, i) => colors[i])
+}
+
 const retrieveCountryColors = (data: RefugeesByCountry[]) => {
   const indexes = [...new Set(data.map((refugees: RefugeesByCountry)  => refugees.country)).values()]
       .map(country => countries.indexOf(country)).sort((a, b) => a - b)
-  return indexes.map(index => countryColors.value.get(index))
+  return indexes.map(index => colors[index])
 }
 
 const retrieveSexColors = (data: RefugeesBySex[]) => {
@@ -119,9 +137,20 @@ const retrieveGroupedData = (data: ChartData[]) => {
 const loadRefugeesByAgeData = () => {
   loadRefugeesByAge(fromYearRef.value, toYearRef.value, minAgeRef.value, maxAgeRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
       .then(() => {
-        refugeesRef.value = refugeesResult.value
+        refugeesByAgeRef.value = refugeesResult.value
         refugeesChartDataRef.value = retrieveRefugeesByAgeChartData(refugeesResult.value)
         ageColorsRef.value = retrieveAgeColors(refugeesResult.value)
+        xLabelsRef.value = [...new Set(refugeesChartDataRef.value.map((d: ChartData) => d.x) as string[]).values()]
+        maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(refugeesChartDataRef.value).values()) as number[])
+      })
+}
+
+const loadRefugeesByAgeGroupData = () => {
+  loadRefugeesByAgeGroup(fromYearRef.value, toYearRef.value, ageGroupsRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
+      .then(() => {
+        refugeesByAgeRef.value = refugeesResult.value
+        refugeesChartDataRef.value = retrieveRefugeesByAgeGroupChartData(refugeesResult.value)
+        ageColorsRef.value = retrieveColors([...new Set(refugeesResult.value.map((refugees: RefugeesByAgeGroup) => {return refugees.ageGroup ? refugees.ageGroup : 'Unbekannt'})).values()])
         xLabelsRef.value = [...new Set(refugeesChartDataRef.value.map((d: ChartData) => d.x) as string[]).values()]
         maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(refugeesChartDataRef.value).values()) as number[])
       })
@@ -130,10 +159,9 @@ const loadRefugeesByAgeData = () => {
 const loadRefugeesByCountryData = () => {
   loadRefugeesByCountry(fromYearRef.value, toYearRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
       .then(() => {
-        refugeesRef.value = refugeesResult.value
+        refugeesByCountryRef.value = refugeesResult.value
         refugeesChartDataRef.value = retrieveRefugeesByCountryChartData(refugeesResult.value)
         countryColorsRef.value = retrieveCountryColors(refugeesResult.value)
-        console.log(countryColorsRef.value)
         xLabelsRef.value = [...new Set(refugeesChartDataRef.value.map((d: ChartData) => d.x) as string[]).values()]
         maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(refugeesChartDataRef.value).values()) as number[])
       })
@@ -142,7 +170,7 @@ const loadRefugeesByCountryData = () => {
 const loadRefugeesBySexData = () => {
   loadRefugeesBySex(fromYearRef.value, toYearRef.value, undefined, countries.filter((country, index) => countriesRef.value.includes(index)))
       .then(() => {
-        refugeesRef.value = refugeesResult.value
+        refugeesBySexRef.value = refugeesResult.value
         refugeesChartDataRef.value = retrieveRefugeesBySexChartData(refugeesResult.value)
         sexColorsRef.value = retrieveSexColors(refugeesResult.value)
         xLabelsRef.value = [...new Set(refugeesChartDataRef.value.map((d: ChartData) => d.x) as string[]).values()]
@@ -158,6 +186,9 @@ watchEffect(() => {
   if (fromYearRef.value || toYearRef.value || countriesRef.value) {
     if (refugeesChartRef.value === 'age') {
       loadRefugeesByAgeData()
+    }
+    if (refugeesChartRef.value === 'age-group') {
+      loadRefugeesByAgeGroupData()
     }
     if (refugeesChartRef.value === 'country') {
       loadRefugeesByCountryData()
@@ -189,6 +220,13 @@ watchEffect(() => {
           >
           </StackedAreaGraph>
           <StackedAreaGraph
+              v-if="refugeesChartRef === 'age-group'"
+              :scale="slotProps.scale"
+              :chartData="refugeesChartDataRef"
+              :colors="ageColorsRef"
+          >
+          </StackedAreaGraph>
+          <StackedAreaGraph
               v-if="refugeesChartRef === 'sex'"
               :scale="slotProps.scale"
               :chartData="refugeesChartDataRef"
@@ -214,7 +252,7 @@ watchEffect(() => {
         </template>
         <template v-slot:info>
           <div class="refugees__reference">
-            <strong>Quellen: </strong>
+            <strong>Quelle: </strong>
             <span>Statistisches Bundesamt (<a href="https://www.destatis.de" target="_blank">www.destatis.de</a>)</span><br>
           </div>
         </template>

@@ -1,16 +1,16 @@
 export const countries = [
-  'Ägypten',
-  'Äquatorialguinea',
-  'Äthiopien',
   'Afghanistan',
+  'Ägypten',
   'Albanien',
   'Algerien',
   'Andorra',
   'Angola',
   'Antigua und Barbuda',
+  'Äquatorialguinea',
   'Argentinien',
   'Armenien',
   'Aserbaidschan',
+  'Äthiopien',
   'Australien',
   'Bahamas',
   'Bahrain',
@@ -35,10 +35,10 @@ export const countries = [
   'China',
   'Costa Rica',
   'Cote d\'Ivoire',
+  'Dänemark',
   'Dominica',
   'Dominikanische Republik',
   'Dschibuti',
-  'Dänemark',
   'Ecuador',
   'El Salvador',
   'Eritrea',
@@ -190,11 +190,12 @@ export const countries = [
   'Tschechoslowakei (bis 31.12.1992)',
   'Tunesien',
   'Turkmenistan',
-  'Tuvalu',
   'Türkei',
+  'Tuvalu',
   'Uganda',
   'Ukraine',
   'Ungarn',
+  'Ungeklärt',
   'Ungeklärt / Ohne Angabe',
   'Uruguay',
   'Usbekistan',
@@ -245,7 +246,7 @@ export const regions = [
       ]],
       ['Sonstige', [
           ['Britische Überseegebiete', ['Britische Überseegebiete']],
-          ['Unbekannt', ['Staatenlos', 'Ungeklärt / Ohne Angabe']]
+          ['Unbekannt', ['Staatenlos', 'Ungeklärt', 'Ungeklärt / Ohne Angabe']]
       ]]
     ]
 ]

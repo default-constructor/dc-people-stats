@@ -11,7 +11,7 @@ const emit = defineEmits(["remove"])
 
 <template>
   <div class="tag">
-    <div class="tag__label">
+    <div class="tag__label" :title="label">
       <div class="tag__label__text">
         <span>{{label}}</span>
       </div>
@@ -23,11 +23,11 @@ const emit = defineEmits(["remove"])
 <style lang="scss" scoped>
 .tag {
   width: 100%;
-  margin: 0 0 .5rem;
+  margin: 0 0 .25rem;
   background-color: $color-white;
 
   &__label {
-    padding: .5rem 32px .5rem .75rem;
+    padding: .25rem 32px .25rem .75rem;
     background-color: v-bind(color);
     border: 1px solid v-bind(color);
     border-radius: 5px;
@@ -43,7 +43,7 @@ const emit = defineEmits(["remove"])
     .close {
       position: absolute;
       right: 8px;
-      top: 12px;
+      top: 7px;
       width: 16px;
       height: 16px;
       opacity: 0.3;

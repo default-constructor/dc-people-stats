@@ -16,6 +16,14 @@ export class RefugeesByAge {
   ) {}
 }
 
+export class RefugeesByAgeGroup {
+  constructor(
+      public year: number,
+      public ageGroup: number,
+      public count: number
+  ) {}
+}
+
 export class RefugeesByCountry {
   constructor(
       public year: number,

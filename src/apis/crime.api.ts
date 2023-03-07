@@ -37,7 +37,7 @@ export const useCrimeApi = () => {
         })
   }
 
-  const loadCrimesByKey = async (from: number, to: number, keys?: string[]) => {
+  const loadCrimesByKey = async (from: number, to: number, sumCases?: boolean, keys?: string[]) => {
     loading.value = true
     error.value = undefined
 
@@ -45,6 +45,10 @@ export const useCrimeApi = () => {
 
     if (to && to >= 1998) {
       params += '&to=' + to
+    }
+
+    if (sumCases) {
+      params += '&sum-cases=true'
     }
 
     if (keys && keys.length > 0) {

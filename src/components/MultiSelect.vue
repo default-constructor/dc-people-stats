@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {ref} from 'vue';
 import Tag from '@/components/Tag.vue'
+import {colors} from "@/constants/colors";
 
 const emit = defineEmits(["update:modelValue"])
 
@@ -8,11 +9,9 @@ const props = defineProps({
   id: String,
   options: Map,
   defaults: {type: Array, default: [] as any[]},
-  colors: Map,
   label: String
 })
 
-const colorsMap = ref((props.colors ? new Map([...props.colors]) : new Map()) as Map<any, string>)
 const optionsMap = ref((props.options ? new Map([...props.options]) : new Map()) as Map<any, string>)
 const selectedMap = ref(new Map<any, string>())
 props.defaults.forEach((d: any) => {
@@ -69,7 +68,7 @@ const removeSelected = (key: any) => {
         </div>
       </div>
       <div class="multi-select__selected">
-        <Tag v-for="[key, value] in selectedMap" :identifier="key" :label="'[' + key + '] ' + value" :color="colorsMap.get(key)" @remove="removeSelected"></Tag>
+        <Tag v-for="([key, value], i) in selectedMap" :identifier="key" :label="'[' + key + '] ' + value" :color="colors[i]" @remove="removeSelected"></Tag>
       </div>
     </div>
   </div>
