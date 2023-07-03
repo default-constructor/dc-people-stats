@@ -39,3 +39,11 @@ export class AliensBySex {
       public count: number
   ) {}
 }
+
+export class PopulationByPercentage {
+  constructor(
+      public year: number,
+      public percentage: number
+  ) {
+  }
+}

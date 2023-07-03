@@ -29,6 +29,8 @@ const updateModelValue = (event: any) => {
 
 <style lang="scss">
 .radio-group {
+  margin-bottom: 8px;
+
   ul {
     li {
       list-style: none;

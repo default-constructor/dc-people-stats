@@ -118,7 +118,7 @@ export default defineComponent({
         .grid {
           line {
             stroke: lightgrey;
-            stroke-opacity: 0.7;
+            stroke-opacity: 1;
             shape-rendering: crispEdges;
           }
 

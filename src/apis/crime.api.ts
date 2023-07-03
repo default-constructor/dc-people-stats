@@ -1,6 +1,6 @@
 import axios from 'axios'
 import {ref} from 'vue'
-import {Crime, CrimeByKey, CrimeBySex} from '@/models/crime.model';
+import {Crime, CrimeByKey, CrimeBySex} from '@/models/crime.model'
 
 export const useCrimeApi = () => {
   const api = axios.create({
@@ -21,8 +21,8 @@ export const useCrimeApi = () => {
       params += '&to=' + to
     }
 
-    if (keys && keys.length > 0) {
-      params += '&keys=' + keys.join(',')
+    if (keys) {
+      keys.forEach(key => params += '&key=' + key)
     }
 
     await api.get('/crime' + params)
@@ -37,7 +37,7 @@ export const useCrimeApi = () => {
         })
   }
 
-  const loadCrimesByKey = async (from: number, to: number, sumCases?: boolean, keys?: string[]) => {
+  const loadCrimesByKey = async (from: number, to: number, cleanCases?: boolean, sumCases?: boolean, keys?: string[]) => {
     loading.value = true
     error.value = undefined
 
@@ -47,12 +47,16 @@ export const useCrimeApi = () => {
       params += '&to=' + to
     }
 
+    if (cleanCases) {
+      params += '&clean-cases=true'
+    }
+
     if (sumCases) {
       params += '&sum-cases=true'
     }
 
-    if (keys && keys.length > 0) {
-      params += '&keys=' + keys.join(',')
+    if (keys) {
+      keys.forEach(key => params += '&key=' + key)
     }
 
     await api.get('/crime-by-key' + params)
@@ -61,6 +65,40 @@ export const useCrimeApi = () => {
         })
         .catch((e) => {
           error.value = 'Failed to load crimes: ' + e.message
+        })
+        .finally(() => {
+          loading.value = false
+        })
+  }
+
+  const loadCrimesBySuspects = async (from: number, to: number, showForeignSuspects?: boolean, sumSuspects?: boolean, keys?: string[]) => {
+    loading.value = true
+    error.value = undefined
+
+    let params = '?from=' + ((from && from > 1998) ? from : 1998)
+
+    if (to && to >= 1998) {
+      params += '&to=' + to
+    }
+
+    if (showForeignSuspects) {
+      params += '&show-foreign-suspects=true'
+    }
+
+    if (sumSuspects) {
+      params += '&sum-suspects=true'
+    }
+
+    if (keys) {
+      keys.forEach(key => params += '&key=' + key)
+    }
+
+    await api.get('/crime-by-suspects' + params)
+        .then((r) => {
+          result.value = r.data as CrimeByKey[]
+        })
+        .catch((e) => {
+          error.value = 'Failed to load crimes by suspects: ' + e.message
         })
         .finally(() => {
           loading.value = false
@@ -81,8 +119,8 @@ export const useCrimeApi = () => {
       params += '&sex=' + sex
     }
 
-    if (keys && keys.length > 0) {
-      params += '&keys=' + keys.join(',')
+    if (keys) {
+      keys.forEach(key => params += '&key=' + key)
     }
 
     await api.get('/crime-by-sex' + params)
@@ -100,6 +138,7 @@ export const useCrimeApi = () => {
   return {
     loadCrimes,
     loadCrimesByKey,
+    loadCrimesBySuspects,
     loadCrimesBySex,
     crimesLoading: loading,
     crimesResult: result,

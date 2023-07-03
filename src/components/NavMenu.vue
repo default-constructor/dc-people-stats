@@ -23,6 +23,9 @@ const handleBurgerMenu = (() => {
       <div class="nav-menu__burger__flyout">
         <ul class="nav-menu__burger__flyout__items">
           <li>
+            <router-link to="/population">Population</router-link>
+          </li>
+          <li>
             <router-link to="/aliens" @click="handleBurgerMenu">Ausländer</router-link>
           </li>
           <li>
@@ -37,6 +40,9 @@ const handleBurgerMenu = (() => {
 
     <div class="nav-menu__main">
       <ul class="nav-menu__main__items">
+        <li>
+          <router-link to="/population">Population</router-link>
+        </li>
         <li>
           <router-link to="/aliens">Ausländer</router-link>
         </li>

@@ -29,8 +29,8 @@ export const useRefugeesApi = () => {
       params += '&maxAge=' + maxAge
     }
 
-    if (countries && countries.length > 0) {
-      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    if (countries) {
+      countries.forEach(country => params += '&country=' + encodeURIComponent(country))
     }
 
     await api.get('/refugees-by-age' + params)
@@ -55,12 +55,12 @@ export const useRefugeesApi = () => {
       params += '&to=' + to
     }
 
-    if (ageGroups && ageGroups.length > 0) {
-      params += '&age-groups=' + ageGroups.join(',')
+    if (ageGroups) {
+      ageGroups.forEach(ageGroup => params += '&age-group=' + ageGroup)
     }
 
-    if (countries && countries.length > 0) {
-      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    if (countries) {
+      countries.forEach(country => params += '&country=' + encodeURIComponent(country))
     }
 
     await api.get('/refugees-by-age-group' + params)
@@ -75,7 +75,7 @@ export const useRefugeesApi = () => {
         })
   }
 
-  const loadRefugeesByCountry = async (from: number, to: number, countries?: string[]) => {
+  const loadRefugeesByCountry = async (from: number, to: number, sumCountries?: boolean, countries?: string[]) => {
     loading.value = true
     error.value = undefined
 
@@ -85,8 +85,12 @@ export const useRefugeesApi = () => {
       params += '&to=' + to
     }
 
-    if (countries && countries.length > 0) {
-      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    if (sumCountries) {
+      params += '&sum-countries=true'
+    }
+
+    if (countries) {
+      countries.forEach(country => params += '&country=' + encodeURIComponent(country))
     }
 
     await api.get('/refugees-by-country' + params)
@@ -115,8 +119,8 @@ export const useRefugeesApi = () => {
       params += '&sex=' + sex
     }
 
-    if (countries && countries.length > 0) {
-      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    if (countries) {
+      countries.forEach(country => params += '&country=' + encodeURIComponent(country))
     }
 
     await api.get('/refugees-by-sex' + params)

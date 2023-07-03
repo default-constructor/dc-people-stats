@@ -27,7 +27,7 @@ const emit = defineEmits(["remove"])
   background-color: $color-white;
 
   &__label {
-    padding: .25rem 32px .25rem .75rem;
+    padding: 0 32px 0 .75rem;
     background-color: v-bind(color);
     border: 1px solid v-bind(color);
     border-radius: 5px;
@@ -43,7 +43,7 @@ const emit = defineEmits(["remove"])
     .close {
       position: absolute;
       right: 8px;
-      top: 7px;
+      top: 3px;
       width: 16px;
       height: 16px;
       opacity: 0.3;

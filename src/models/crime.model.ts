@@ -23,6 +23,14 @@ export class CrimeByKey {
   ) {}
 }
 
+export class CrimeBySuspect {
+  constructor(
+      public year: number,
+      public key: string,
+      public count: number
+  ) {}
+}
+
 export class CrimeBySex {
   constructor(
       public year: number,

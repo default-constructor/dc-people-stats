@@ -12,23 +12,23 @@ import MultiSelect from '@/components/MultiSelect.vue'
 import {viewStore} from '@/states/country.state'
 import {colors} from "@/constants/colors";
 import {countries} from "@/constants/countries";
+import LabeledCheckbox from "@/components/LabeledCheckbox.vue";
 
 const refugeesByAgeRef = ref([] as RefugeesByAge[])
 const refugeesByCountryRef = ref([] as RefugeesByCountry[])
 const refugeesBySexRef = ref([] as RefugeesBySex[])
 const refugeesChartDataRef = ref([] as ChartData[])
 
-const countryMap = ref(new Map<any, string>())
 const countryColors = ref(new Map<any, string>())
+const countryMap = ref(new Map<any, string>())
 countries.forEach((country, i) => {
   countryMap.value.set(i, country)
-  countryColors.value.set(i, colors[i])
 })
 
 const ageGroups = range(0, 97).map((age, i) => {return {name: age < 96 ? age.toString() : 'Unbekannt', color: colors[i]}})
 const sexGroups = [{name: 'männlich', color: '#00d9ff'}, {name: 'weiblich', color: '#ff4d4d'}]
 
-let refugeesChartRef = ref('country')
+let refugeesChartTypeRef = ref('country')
 const refugeesRadioGroupRef = ref([
   {id: 'refugees-by-country', label: 'Nach Land', value: 'country', checked: true},
   {id: 'refugees-by-age', label: 'Nach Alter', value: 'age', checked: false},
@@ -47,6 +47,7 @@ const toYearRef = ref(2021)
 const minAgeRef = ref()
 const maxAgeRef = ref()
 const ageGroupsRef = ref(['0-4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80-84', '85-89', '90-94', '95-99'])
+const sumCountriesCheckboxRef = ref()
 
 let defaultCountries = viewStore.selectedFilters.get('refugees');
 if (!defaultCountries || defaultCountries.length === 0) {
@@ -111,10 +112,17 @@ const retrieveColors = (identifiers: any[]) => {
   return identifiers.map((identifier, i) => colors[i])
 }
 
-const retrieveCountryColors = (data: RefugeesByCountry[]) => {
-  const indexes = [...new Set(data.map((refugees: RefugeesByCountry)  => refugees.country)).values()]
-      .map(country => countries.indexOf(country)).sort((a, b) => a - b)
-  return indexes.map(index => colors[index])
+const retrieveCountryColors = (countries: string[]) => {
+  const map = new Map<number, string>();
+  if (refugeesChartTypeRef.value === 'country' && sumCountriesCheckboxRef.value) {
+    map.set(-1, '#6b6b6b')
+  } else {
+    countries.forEach((country, i) => {
+      map.set(i, colors[i])
+    })
+  }
+
+  return map
 }
 
 const retrieveSexColors = (data: RefugeesBySex[]) => {
@@ -157,11 +165,11 @@ const loadRefugeesByAgeGroupData = () => {
 }
 
 const loadRefugeesByCountryData = () => {
-  loadRefugeesByCountry(fromYearRef.value, toYearRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
+  loadRefugeesByCountry(fromYearRef.value, toYearRef.value, sumCountriesCheckboxRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
       .then(() => {
         refugeesByCountryRef.value = refugeesResult.value
         refugeesChartDataRef.value = retrieveRefugeesByCountryChartData(refugeesResult.value)
-        countryColorsRef.value = retrieveCountryColors(refugeesResult.value)
+        countryColors.value = retrieveCountryColors([...new Set(refugeesResult.value.map((refugees: RefugeesByCountry)  => refugees.country)).values()] as string[])
         xLabelsRef.value = [...new Set(refugeesChartDataRef.value.map((d: ChartData) => d.x) as string[]).values()]
         maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(refugeesChartDataRef.value).values()) as number[])
       })
@@ -183,17 +191,17 @@ watch(countriesRef, countries => {
 })
 
 watchEffect(() => {
-  if (fromYearRef.value || toYearRef.value || countriesRef.value) {
-    if (refugeesChartRef.value === 'age') {
+  if (fromYearRef.value || toYearRef.value || countriesRef.value || sumCountriesCheckboxRef.value) {
+    if (refugeesChartTypeRef.value === 'age') {
       loadRefugeesByAgeData()
     }
-    if (refugeesChartRef.value === 'age-group') {
+    if (refugeesChartTypeRef.value === 'age-group') {
       loadRefugeesByAgeGroupData()
     }
-    if (refugeesChartRef.value === 'country') {
+    if (refugeesChartTypeRef.value === 'country') {
       loadRefugeesByCountryData()
     }
-    if (refugeesChartRef.value === 'sex') {
+    if (refugeesChartTypeRef.value === 'sex') {
       loadRefugeesBySexData()
     }
   }
@@ -206,28 +214,28 @@ watchEffect(() => {
       <Chart id="refugees-stats-chart" :xLabels="xLabelsRef" :maxPositiveYValue="maxPositiveYValueRef" :maxNegativeYValue="0">
         <template v-slot:graph="slotProps">
           <StackedAreaGraph
-              v-if="refugeesChartRef === 'country'"
+              v-if="refugeesChartTypeRef === 'country'"
               :scale="slotProps.scale"
               :chartData="refugeesChartDataRef"
-              :colors="countryColorsRef"
+              :colors="Array.from(countryColors.values())"
           >
           </StackedAreaGraph>
           <StackedAreaGraph
-              v-if="refugeesChartRef === 'age'"
-              :scale="slotProps.scale"
-              :chartData="refugeesChartDataRef"
-              :colors="ageColorsRef"
-          >
-          </StackedAreaGraph>
-          <StackedAreaGraph
-              v-if="refugeesChartRef === 'age-group'"
+              v-if="refugeesChartTypeRef === 'age'"
               :scale="slotProps.scale"
               :chartData="refugeesChartDataRef"
               :colors="ageColorsRef"
           >
           </StackedAreaGraph>
           <StackedAreaGraph
-              v-if="refugeesChartRef === 'sex'"
+              v-if="refugeesChartTypeRef === 'age-group'"
+              :scale="slotProps.scale"
+              :chartData="refugeesChartDataRef"
+              :colors="ageColorsRef"
+          >
+          </StackedAreaGraph>
+          <StackedAreaGraph
+              v-if="refugeesChartTypeRef === 'sex'"
               :scale="slotProps.scale"
               :chartData="refugeesChartDataRef"
               :colors="sexColorsRef"
@@ -246,7 +254,13 @@ watchEffect(() => {
                 </LabeledSelect>
               </li>
             </ul>
-            <RadioGroup name="refugees" :options="refugeesRadioGroupRef" v-model="refugeesChartRef"></RadioGroup>
+            <div>
+              <RadioGroup name="refugees" :options="refugeesRadioGroupRef" v-model="refugeesChartTypeRef"></RadioGroup>
+              <LabeledCheckbox
+                  v-if="refugeesChartTypeRef === 'country'" id="sum-countries" label="Länder zusammenfassen"
+                  v-model="sumCountriesCheckboxRef">
+              </LabeledCheckbox>
+            </div>
             <MultiSelect :options="countryMap" :defaults="countriesRef" :colors="countryColors" label="Länderauswahl" v-model="countriesRef"></MultiSelect>
           </div>
         </template>

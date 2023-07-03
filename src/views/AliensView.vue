@@ -8,7 +8,7 @@ import {useAliensApi} from '@/apis/aliens.api';
 import {AliensByAge, AliensByAgeGroup, AliensByCountry, AliensBySex} from '@/models/aliens.model';
 import RadioGroup from '@/components/RadioGroup.vue';
 import MultiSelect from '@/components/MultiSelect.vue';
-import {viewStore} from "@/states/country.state";
+import {aliensStore} from "@/states/aliens.state";
 import {colors} from "@/constants/colors";
 import {countries} from "@/constants/countries";
 import LabeledCheckbox from "@/components/LabeledCheckbox.vue";
@@ -16,11 +16,10 @@ import LabeledCheckbox from "@/components/LabeledCheckbox.vue";
 const aliensRef = ref()
 const aliensChartDataRef = ref([] as ChartData[])
 
-const countryMap = ref(new Map<any, string>())
 const countryColors = ref(new Map<number, string>())
+const countryMap = ref(new Map<any, string>())
 countries.forEach((country, i) => {
   countryMap.value.set(i, country)
-  countryColors.value.set(i, colors[i])
 })
 
 const sexGroups = [{name: 'männlich', color: '#00d9ff'}, {name: 'weiblich', color: '#ff4d4d'}]
@@ -39,18 +38,18 @@ const ageColorsRef = ref()
 const countryColorsRef = ref()
 const sexColorsRef = ref()
 
-const fromYearRef = ref(2010)
-const toYearRef = ref(2021)
+const fromYearRef = ref(aliensStore.fromYear)
+const toYearRef = ref(aliensStore.toYear)
 const minAgeRef = ref()
 const maxAgeRef = ref()
-const ageGroupsRef = ref(['0-4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80-84', '85-89', '90-94', '95-99'])
-const lessRefugeesCheckboxRef = ref()
-const sumCasesCheckboxRef = ref()
+const ageGroupsRef = ref(aliensStore.ageGroups)
+const sumCountriesCheckboxRef = ref(aliensStore.sumCountries)
+const lessRefugeesCheckboxRef = ref(aliensStore.lessRefugees)
 
-let defaultCountries = viewStore.selectedFilters.get('aliens');
+let defaultCountries = aliensStore.countries
 if (!defaultCountries || defaultCountries.length === 0) {
   defaultCountries = [0, 164, 171, 175, 197]
-  viewStore.setSelectedFilters('aliens', defaultCountries)
+  aliensStore.setCountries(defaultCountries)
 }
 const countriesRef = ref(defaultCountries as number[])
 
@@ -112,7 +111,7 @@ const retrieveColors = (identifiers: any[]) => {
 
 const retrieveCountryColors = (countries: string[]) => {
   const map = new Map<number, string>();
-  if (aliensChartTypeRef.value === 'country' && sumCasesCheckboxRef.value) {
+  if (aliensChartTypeRef.value === 'country' && sumCountriesCheckboxRef.value) {
     map.set(-1, '#6b6b6b')
   } else {
     countries.forEach((country, i) => {
@@ -121,10 +120,6 @@ const retrieveCountryColors = (countries: string[]) => {
   }
 
   return map
-  /*
-  const indexes = [...new Set(data.map((aliens: AliensByCountry)  => aliens.country)).values()]
-      .map(country => countries.indexOf(country)).sort((a, b) => a - b)
-  return indexes.map(index => countryColors.value.get(index))*/
 }
 
 const retrieveSexColors = (data: AliensBySex[]) => {
@@ -161,14 +156,13 @@ const loadAliensByAgeGroupData = () => {
         aliensRef.value = aliensResult.value
         aliensChartDataRef.value = retrieveAliensByAgeGroupChartData(aliensResult.value)
         ageColorsRef.value = retrieveColors([...new Set(aliensResult.value.map((aliens: AliensByAgeGroup) => {return aliens.ageGroup ? aliens.ageGroup : 'Unbekannt'})).values()])
-        console.log(ageColorsRef.value)
         xLabelsRef.value = [...new Set(aliensChartDataRef.value.map((d: ChartData) => d.x) as string[]).values()]
         maxPositiveYValueRef.value = Math.max(...Array.from(retrieveGroupedData(aliensChartDataRef.value).values()) as number[])
       })
 }
 
 const loadAliensByCountryData = () => {
-  loadAliensByCountry(fromYearRef.value, toYearRef.value, lessRefugeesCheckboxRef.value, sumCasesCheckboxRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
+  loadAliensByCountry(fromYearRef.value, toYearRef.value, lessRefugeesCheckboxRef.value, sumCountriesCheckboxRef.value, countries.filter((country, index) => countriesRef.value.includes(index)))
       .then(() => {
         aliensRef.value = aliensResult.value
         aliensChartDataRef.value = retrieveAliensByCountryChartData(aliensRef.value)
@@ -190,23 +184,24 @@ const loadAliensBySexData = () => {
       })
 }
 
-watch(countriesRef, countries => {
-  viewStore.setSelectedFilters('aliens', countries)
-})
-
 watchEffect(() => {
-  if (fromYearRef.value || toYearRef.value || countriesRef.value || lessRefugeesCheckboxRef.value || sumCasesCheckboxRef.value) {
-    if (aliensChartTypeRef.value === 'age') {
-      loadAliensByAgeData()
-    }
-    if (aliensChartTypeRef.value === 'age-group') {
-      loadAliensByAgeGroupData()
-    }
-    if (aliensChartTypeRef.value === 'country') {
-      loadAliensByCountryData()
-    }
-    if (aliensChartTypeRef.value === 'sex') {
-      loadAliensBySexData()
+  if (fromYearRef.value || toYearRef.value || countriesRef.value || sumCountriesCheckboxRef.value || lessRefugeesCheckboxRef.value) {
+    aliensStore.set(fromYearRef.value, toYearRef.value, countriesRef.value, sumCountriesCheckboxRef.value, lessRefugeesCheckboxRef.value)
+
+    switch (aliensChartTypeRef.value) {
+      case 'age':
+        loadAliensByAgeData()
+        break
+      case 'age-group':
+        loadAliensByAgeGroupData()
+        break
+      case 'country':
+        loadAliensByCountryData()
+        break
+      case 'sex':
+        loadAliensBySexData()
+        break
+      default:
     }
   }
 })
@@ -258,17 +253,21 @@ watchEffect(() => {
                 </LabeledSelect>
               </li>
             </ul>
-            <ul>
-              <li>
-                <LabeledCheckbox id="less-refugees" label="Ohne Schutzsuchende" v-model="lessRefugeesCheckboxRef"></LabeledCheckbox>
-              </li>
-            </ul>
+
             <div>
               <RadioGroup name="aliens" :options="aliensRadioGroupRef" v-model="aliensChartTypeRef"></RadioGroup>
-              <LabeledCheckbox
-                  v-if="aliensChartTypeRef === 'country'" id="sum-countries" label="Länder zusammenfassen"
-                  v-model="sumCasesCheckboxRef">
-              </LabeledCheckbox>
+              <ul>
+                <li>
+                  <LabeledCheckbox
+                      v-if="aliensChartTypeRef === 'country'" id="sum-countries" label="Länder zusammenfassen"
+                      v-model="sumCountriesCheckboxRef">
+                  </LabeledCheckbox>
+                </li>
+                <li>
+                  <LabeledCheckbox id="less-refugees" label="Ohne Schutzsuchende" v-model="lessRefugeesCheckboxRef">
+                  </LabeledCheckbox>
+                </li>
+              </ul>
             </div>
             <MultiSelect :options="countryMap" :defaults="countriesRef" :colors="countryColors" label="Länderauswahl" v-model="countriesRef"></MultiSelect>
           </div>

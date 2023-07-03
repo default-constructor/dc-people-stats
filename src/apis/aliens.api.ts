@@ -29,8 +29,8 @@ export const useAliensApi = () => {
       params += '&maxAge=' + maxAge
     }
 
-    if (countries && countries.length > 0) {
-      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    if (countries) {
+      countries.forEach(country => params += '&country=' + encodeURIComponent(country))
     }
 
     await api.get('/aliens-by-age' + params)
@@ -55,12 +55,12 @@ export const useAliensApi = () => {
       params += '&to=' + to
     }
 
-    if (ageGroups && ageGroups.length > 0) {
-      params += '&age-groups=' + ageGroups.join(',')
+    if (ageGroups) {
+      ageGroups.forEach(ageGroup => params += '&age-group=' + ageGroup)
     }
 
-    if (countries && countries.length > 0) {
-      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    if (countries) {
+      countries.forEach(country => params += '&country=' + encodeURIComponent(country))
     }
 
     await api.get('/aliens-by-age-group' + params)
@@ -93,8 +93,8 @@ export const useAliensApi = () => {
       params += '&sum-countries=true'
     }
 
-    if (countries && countries.length > 0) {
-      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    if (countries) {
+      countries.forEach(country => params += '&country=' + encodeURIComponent(country))
     }
 
     await api.get('/aliens-by-country' + params)
@@ -123,8 +123,8 @@ export const useAliensApi = () => {
       params += '&sex=' + sex
     }
 
-    if (countries && countries.length > 0) {
-      params += '&countries=' + countries.map(country => encodeURIComponent(country)).join(',')
+    if (countries) {
+      countries.forEach(country => params += '&country=' + encodeURIComponent(country))
     }
 
     await api.get('/aliens-by-sex' + params)
